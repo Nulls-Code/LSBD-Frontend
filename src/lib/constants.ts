@@ -27,11 +27,11 @@ export const COMPANY_INFO: CompanyInfo = {
 
 export const NAV_LINKS: NavLink[] = [
   { id: "home", label: "Home", href: "#" },
-  { id: "services", label: "Services", href: "#services" },
-  { id: "tracking", label: "Tracking", href: "#tracking" },
-  { id: "about", label: "About Us", href: "#about" },
-  { id: "news", label: "News", href: "#news" },
-  { id: "contact", label: "Contact", href: "#contact" },
+  { id: "services", label: "Services", href: "services" },
+  { id: "tracking", label: "Tracking", href: "tracking" },
+  { id: "about", label: "About Us", href: "about" },
+  { id: "news", label: "News", href: "news" },
+  { id: "contact", label: "Contact", href: "contact" },
 ];
 
 // ──────────────────────────────────────────────

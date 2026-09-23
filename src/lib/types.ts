@@ -71,14 +71,25 @@ export interface TrackingStatus {
 // ──────────────────────────────────────────────
 
 export interface RequestFormData {
-  fullName: string;
-  phone: string;
-  email: string;
-  weight: string;
-  origin: string;
-  destination: string;
-  shipmentType: string;
-  message: string;
+  senderName: string;
+  senderPhone: string;
+  senderEmail: string;
+  senderCompany?: string;
+  senderAddress: string;
+  
+  recipientName: string;
+  recipientPhone: string;
+  recipientEmail?: string;
+  recipientAddress: string;
+  
+  originLocationId: string;
+  destinationLocationId: string;
+  
+  packageWeight: string;
+  weightUnit: string;
+  packageCount: string;
+  packageDescription: string;
+  requestNotes: string;
 }
 
 // ──────────────────────────────────────────────

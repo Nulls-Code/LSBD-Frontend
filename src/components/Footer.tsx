@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Star, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import { SOCIAL_ICON_MAP } from "@/components/icons/SocialIcons";
 import { COMPANY_INFO, FOOTER_LINK_GROUPS, SOCIAL_LINKS } from "@/lib/constants";
 
@@ -10,8 +11,16 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12 mb-16">
           {/* Column 1: Logo & Info (Spans 5 columns) */}
           <div className="lg:col-span-5 space-y-6">
-            <Link href="/" className="inline-flex items-center gap-2 bg-white px-3 py-2 rounded-sm w-fit">
-              <Star className="size-8 text-[#079447] fill-[#079447]" />
+            <Link href="/" className="inline-flex items-center gap-2.5 bg-white px-3.5 py-2 rounded-lg w-fit group hover:opacity-95 transition-opacity">
+              <div className="relative w-9 h-9 flex items-center justify-center shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="Logistic Star BD"
+                  width={36}
+                  height={42}
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <div className="flex flex-col">
                 <span className="font-black text-[22px] tracking-tight text-[#08254a] leading-none">
                   LOGISTIC

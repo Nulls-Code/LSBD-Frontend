@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Star, Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { NAV_LINKS } from "@/lib/constants";
 
 export function Navbar() {
@@ -16,8 +17,15 @@ export function Navbar() {
       <div className="px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10  flex items-center justify-center text-[#079447] group-hover:scale-105 transition-transform">
-            <Star className="size-6 fill-[#079447]" />
+          <div className="relative w-10 h-10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <Image
+              src="/logo.png"
+              alt="Logistic Star BD"
+              width={40}
+              height={46}
+              className="w-full h-full object-contain"
+              priority
+            />
           </div>
           <div className="flex flex-col">
             <span className="font-black text-xl tracking-tight text-[#08254a] leading-none">
