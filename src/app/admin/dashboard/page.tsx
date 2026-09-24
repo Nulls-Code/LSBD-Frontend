@@ -690,9 +690,14 @@ export default function DashboardPage() {
             setSelectedShipmentForDetails(null);
           }}
           shipment={selectedShipmentForDetails}
+          userRole={currentUser?.role}
           onLogCheckpoint={(shipment) => {
             setIsDetailsModalOpen(false);
             handleOpenLogCheckpoint(shipment);
+          }}
+          onUpdateSuccess={(updated) => {
+            fetchDashboardData(true);
+            setSelectedShipmentForDetails(updated);
           }}
         />
       )}

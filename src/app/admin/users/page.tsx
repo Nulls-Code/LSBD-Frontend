@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { 
   Shield, Plus, MoreHorizontal, UserCog, KeyRound, 
-  UserX, UserCheck, CheckCircle2, RefreshCw, Loader2, AlertCircle
+  UserX, UserCheck, CheckCircle2, RefreshCw, Loader2, AlertCircle,
+  ShieldAlert, Lock, ArrowLeft, Truck
 } from "lucide-react";
-import { fetchUsers } from "@/lib/api";
+import { fetchUsers, fetchUserProfile } from "@/lib/api";
 import { StaffUser } from "@/lib/types";
 import { RegisterStaffModal } from "@/components/admin/RegisterStaffModal";
 import { EditStaffModal } from "@/components/admin/EditStaffModal";
@@ -13,11 +16,17 @@ import { DeactivateStaffModal } from "@/components/admin/DeactivateStaffModal";
 import { ResetPasswordModal } from "@/components/admin/ResetPasswordModal";
 
 export default function AdministrationManagementPage() {
+  const router = useRouter();
+
+  // RBAC Access Guard State
+  const [authStatus, setAuthStatus] = useState<"checking" | "authorized" | "unauthorized">("checking");
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState("aminul@lsbd.demo");
+  const [currentUserId, setCurrentUserId] = useState("usr-admin-01");
+
   const [users, setUsers] = useState<StaffUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentUserEmail, setCurrentUserEmail] = useState("aminul@lsbd.demo");
-  const [currentUserId, setCurrentUserId] = useState("usr-admin-01");
 
   // Notifications
   const [successToast, setSuccessToast] = useState<string | null>(null);
@@ -32,25 +41,7 @@ export default function AdministrationManagementPage() {
   const [selectedUserForDeactivate, setSelectedUserForDeactivate] = useState<StaffUser | null>(null);
   const [selectedUserForReset, setSelectedUserForReset] = useState<StaffUser | null>(null);
 
-  // Fetch current user profile to identify "You"
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await fetch("/api/v1/auth/profile", { credentials: "include" });
-        if (res.ok) {
-          const json = await res.json();
-          const user = json?.data?.user || json?.data;
-          if (user?.email) setCurrentUserEmail(user.email);
-          if (user?.id) setCurrentUserId(user.id);
-        }
-      } catch {
-        // Dev fallback
-      }
-    };
-    fetchProfile();
-  }, []);
-
-  // Fetch staff users from backend
+  // Fetch staff users from backend (only called if authorized)
   const loadUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -69,35 +60,68 @@ export default function AdministrationManagementPage() {
     }
   }, []);
 
+  // Check user profile and enforce RBAC Route Guard (PDF Section 2.2 & 7.7)
   useEffect(() => {
-    let ignore = false;
-    async function initUsers() {
+    let isMounted = true;
+
+    const verifyAccess = async () => {
       try {
-        setError(null);
-        const res = await fetchUsers(1, 100);
-        if (!ignore) {
-          if (res.success && res.data) {
-            setUsers(res.data);
+        const res = await fetchUserProfile();
+        if (!isMounted) return;
+
+        if (res.success && res.data) {
+          const user = res.data;
+          if (user.email) setCurrentUserEmail(user.email);
+          if (user.id) setCurrentUserId(user.id);
+          const role = user.role?.toUpperCase() || "EMPLOYEE";
+          setCurrentUserRole(role);
+
+          if (role === "ADMIN") {
+            setAuthStatus("authorized");
+            loadUsers();
           } else {
-            setError(res.message || "Failed to load staff accounts.");
+            setAuthStatus("unauthorized");
+            setLoading(false);
           }
-        }
-      } catch (err: unknown) {
-        if (!ignore) {
-          const errObj = err as { message?: string };
-          setError(errObj.message || "Failed to connect to backend server.");
-        }
-      } finally {
-        if (!ignore) {
+        } else {
+          // Fallback if not authenticated
+          setAuthStatus("unauthorized");
           setLoading(false);
         }
+      } catch (err) {
+        if (!isMounted) return;
+        setAuthStatus("unauthorized");
+        setLoading(false);
       }
-    }
-    initUsers();
-    return () => {
-      ignore = true;
     };
-  }, []);
+
+    verifyAccess();
+
+    // Listen for role updates (e.g. from topbar role switcher)
+    const handleProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        const updatedRole = customEvent.detail.role?.toUpperCase();
+        if (updatedRole) {
+          setCurrentUserRole(updatedRole);
+          if (updatedRole === "ADMIN") {
+            setAuthStatus("authorized");
+            loadUsers();
+          } else {
+            setAuthStatus("unauthorized");
+          }
+        }
+        if (customEvent.detail.email) setCurrentUserEmail(customEvent.detail.email);
+        if (customEvent.detail.id) setCurrentUserId(customEvent.detail.id);
+      }
+    };
+
+    window.addEventListener("user-profile-updated", handleProfileUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("user-profile-updated", handleProfileUpdate);
+    };
+  }, [loadUsers]);
 
   // Click outside listener for action dropdown
   useEffect(() => {
@@ -169,6 +193,102 @@ export default function AdministrationManagementPage() {
     showToast("Temporary password generated and updated successfully.");
   };
 
+  // 1. Loading / Verification State
+  if (authStatus === "checking") {
+    return (
+      <div className="p-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-9 h-9 animate-spin text-[#082A46]" />
+          <h3 className="text-sm font-bold text-slate-800">Verifying administrative access...</h3>
+          <p className="text-xs text-slate-500">Checking credentials against RBAC security policy</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Unauthorized 403 Access Denied State (PDF Section 2.2 & 7.7)
+  if (authStatus === "unauthorized") {
+    return (
+      <div className="p-8 w-full max-w-4xl mx-auto min-h-screen bg-[#F8FAFC] flex flex-col justify-center">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[#0f1b3b] text-white p-6 sm:p-8 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-7 h-7 text-rose-400" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider uppercase bg-rose-500/20 text-rose-300 border border-rose-500/30 mb-1.5">
+                <Lock className="w-3 h-3" />
+                403 • ACCESS RESTRICTED
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+                Administrator Access Required
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                You do not have permission to access the User Administration module.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-8 space-y-6">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 space-y-3">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Current Session Information
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="bg-white border border-slate-200 rounded-lg p-3">
+                  <span className="text-slate-400 block text-[10px] font-bold uppercase">Account Email</span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">{currentUserEmail || "Authenticated Staff"}</span>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3">
+                  <span className="text-slate-400 block text-[10px] font-bold uppercase">Active Role</span>
+                  <span className="inline-flex items-center gap-1.5 mt-0.5">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-200 text-slate-800 uppercase">
+                      {currentUserRole || "EMPLOYEE"}
+                    </span>
+                    <span className="text-[11px] text-slate-500">(Requires ADMIN)</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 flex items-start gap-3">
+              <Shield className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block text-sm mb-0.5">RBAC Security Directive (Section 2.2 &amp; 7.7)</span>
+                <p className="text-amber-800 leading-relaxed text-xs">
+                  User registration, password resets, account deactivations, and role modifications are exclusively restricted to system Administrators. Managers and Employees are strictly barred from querying or modifying user account lists.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200">
+              <span className="text-xs text-slate-400">
+                Need administrative privileges? Contact your system supervisor.
+              </span>
+              <div className="flex items-center gap-2.5">
+                <Link
+                  href="/admin/shipments"
+                  className="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Truck className="w-3.5 h-3.5 text-slate-500" />
+                  View Shipments
+                </Link>
+                <Link
+                  href="/admin/dashboard"
+                  className="px-4 py-2 rounded-lg bg-[#0B132B] hover:bg-[#1E293B] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  Return to Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Authorized Administrator View
   return (
     <div className="p-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F8FAFC]">
       {/* Toast Alert */}

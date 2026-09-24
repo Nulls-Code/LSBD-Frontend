@@ -422,10 +422,17 @@ export interface Shipment {
   currentLocation?: Location;
   estimatedDeliveryDate?: string | null;
   assignedTo?: StaffUser | null;
+  assignedToId?: string | null;
   internalNotes?: string;
   createdAt: string;
   updatedAt: string;
   trackingUpdates?: TrackingUpdateItem[];
+}
+
+export interface UpdateShipmentInput {
+  assignedToId?: string | null;
+  estimatedDeliveryDate?: string | null;
+  internalNotes?: string | null;
 }
 
 export interface ShipmentResponse {

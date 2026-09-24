@@ -670,9 +670,15 @@ export default function ShipmentsPage() {
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         shipment={selectedShipmentForDetails}
+        userRole={currentUser?.role}
+        staffUsers={staffUsers}
         onLogCheckpoint={(shipment) => {
           setSelectedShipmentForCheckpoint(shipment);
           setIsCheckpointModalOpen(true);
+        }}
+        onUpdateSuccess={(updated) => {
+          loadData();
+          setSelectedShipmentForDetails(updated);
         }}
       />
     </div>

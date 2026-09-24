@@ -17,7 +17,9 @@ import {
   UpdateCustomerInput,
   RegisterStaffInput,
   UpdateUserInput,
-  StaffUser
+  StaffUser,
+  Shipment,
+  UpdateShipmentInput
 } from "./types";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://lsbd-backend.vercel.app";
@@ -357,6 +359,31 @@ export async function fetchShipmentById(id: string): Promise<SingleShipmentRespo
   }
 
   return response.json();
+}
+
+export async function updateShipment(
+  id: string,
+  data: UpdateShipmentInput
+): Promise<{ success: boolean; data?: Shipment; message?: string; error?: any }> {
+  const response = await fetch(`${API_BASE_URL}/shipments/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  const resJson = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const errorObj = new Error(resJson.error?.message || resJson.message || `Failed to update shipment`);
+    (errorObj as any).status = response.status;
+    (errorObj as any).errors = resJson.error?.errors;
+    (errorObj as any).code = resJson.error?.code;
+    throw errorObj;
+  }
+
+  return resJson;
 }
 
 export async function logShipmentCheckpoint(
