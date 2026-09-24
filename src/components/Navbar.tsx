@@ -17,12 +17,12 @@ export function Navbar() {
       <div className="px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative w-10 h-10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <div className="relative w-11 h-11 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
             <Image
-              src="/logo.png"
+              src="/logo.webp"
               alt="Logistic Star BD"
-              width={40}
-              height={46}
+              width={44}
+              height={44}
               className="w-full h-full object-contain"
               priority
             />

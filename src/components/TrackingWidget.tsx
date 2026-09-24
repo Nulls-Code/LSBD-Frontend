@@ -65,8 +65,8 @@ export function TrackingWidget() {
   };
 
   const handleSampleClick = () => {
-    setTrackingId("LSBD1234567");
-    setResult(MOCK_SHIPMENTS["LSBD1234567"]);
+    setTrackingId("LSBD-XXXXXX-YYYYY");
+    setResult(MOCK_SHIPMENTS["LSBD-XXXXXX-YYYYY"]);
   };
 
   return (

@@ -38,7 +38,7 @@ export default function RequestQuotePage() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/v1/locations/public")
+    fetch("/api/v1/locations/public")
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
@@ -74,7 +74,7 @@ export default function RequestQuotePage() {
         packageCount: data.packageCount ? parseInt(data.packageCount, 10) || 1 : 1,
       };
 
-      const response = await fetch("http://localhost:5000/api/v1/courier-requests", {
+      const response = await fetch("/api/v1/courier-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

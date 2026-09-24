@@ -11,6 +11,13 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "LOGISTIC STAR BD LTD. | Global Air Freight & Express Cargo",
   description: "Fast, Reliable & Secure International Courier Solutions by Air",
+  icons: {
+    icon: [
+      { url: "/logo.webp", type: "image/webp" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({

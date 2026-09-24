@@ -14,10 +14,10 @@ export function Footer() {
             <Link href="/" className="inline-flex items-center gap-2.5 bg-white px-3.5 py-2 rounded-lg w-fit group hover:opacity-95 transition-opacity">
               <div className="relative w-9 h-9 flex items-center justify-center shrink-0">
                 <Image
-                  src="/logo.png"
+                  src="/logo.webp"
                   alt="Logistic Star BD"
                   width={36}
-                  height={42}
+                  height={36}
                   className="w-full h-full object-contain"
                 />
               </div>

@@ -19,7 +19,7 @@ export default function TrackingPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:5000/api/v1/tracking/${trackingNumber}`);
+      const response = await fetch(`/api/v1/tracking/${trackingNumber}`);
       const result = await response.json();
 
       if (response.ok && result.success) {
