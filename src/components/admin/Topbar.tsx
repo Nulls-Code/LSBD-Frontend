@@ -126,25 +126,9 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Preview as selector */}
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <span className="text-xs text-slate-400">Preview as</span>
-          <div className="relative">
-            <select
-              defaultValue="Admin"
-              className="appearance-none bg-slate-800/80 border border-slate-700 text-slate-200 text-xs font-medium rounded-md pl-2.5 pr-7 py-1.5 focus:outline-none focus:border-slate-500 cursor-pointer"
-            >
-              <option value="Admin">Admin</option>
-              <option value="Manager">Manager</option>
-              <option value="Employee">Employee</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
-
         {/* Profile with Avatar */}
         <div className="relative" ref={dropdownRef}>
-          <button 
+          <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-3 focus:outline-none hover:opacity-90 transition-opacity"
           >

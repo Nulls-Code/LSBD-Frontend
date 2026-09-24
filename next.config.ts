@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://lsbd-backend.vercel.app";
+
 const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:5000/api/:path*",
+        destination: `${BACKEND_URL}/api/:path*`,
       },
     ];
   },

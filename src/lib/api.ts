@@ -20,7 +20,10 @@ import {
   StaffUser
 } from "./types";
 
-const API_BASE_URL = "http://localhost:5000/api/v1";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://lsbd-backend.vercel.app";
+const API_BASE_URL = 
+  process.env.NEXT_PUBLIC_API_URL || 
+  (typeof window !== "undefined" ? "/api/v1" : `${BACKEND_URL}/api/v1`);
 
 export async function fetchCourierRequests(
   page: number = 1,

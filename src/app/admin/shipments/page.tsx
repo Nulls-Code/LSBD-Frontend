@@ -184,7 +184,7 @@ export default function ShipmentsPage() {
               if (res?.success && Array.isArray(res.data)) return res;
             }
             // Fallback direct fetch if helper is not yet available in cached bundle
-            const directRes = await fetch("http://localhost:5000/api/v1/users?limit=100", {
+            const directRes = await fetch("/api/v1/users?limit=100", {
               credentials: "include",
             });
             if (directRes.ok) {

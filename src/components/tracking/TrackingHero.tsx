@@ -1,23 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Package, ArrowRight, Loader2 } from "lucide-react";
 
 interface TrackingHeroProps {
   onTrack: (trackingNumber: string) => void;
   isLoading: boolean;
+  initialTrackingNumber?: string;
 }
 
-export function TrackingHero({ onTrack, isLoading }: TrackingHeroProps) {
-  const [trackingNumber, setTrackingNumber] = useState("");
+export function TrackingHero({ onTrack, isLoading, initialTrackingNumber = "" }: TrackingHeroProps) {
+  const [trackingNumber, setTrackingNumber] = useState(initialTrackingNumber);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (initialTrackingNumber) {
+      setTrackingNumber(initialTrackingNumber);
+    }
+  }, [initialTrackingNumber]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     
-    const trimmed = trackingNumber.trim();
+    const trimmed = trackingNumber.trim().toUpperCase();
     if (!trimmed) return;
 
-    const regex = /^LSBD-\d{6}-\d{5,}$/;
+    const regex = /^(LSBD-\d{6}-\d{5,}|LSBD\d{6,})$/i;
     if (!regex.test(trimmed)) {
       setError("Invalid format. Example: LSBD-202609-00001");
       return;
