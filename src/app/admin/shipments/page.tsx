@@ -7,7 +7,7 @@ import {
   Building2, Compass, PauseCircle, CheckCircle2, AlertTriangle, Package, RotateCcw, Slash
 } from "lucide-react";
 import clsx from "clsx";
-import { fetchShipments, fetchLocations, fetchStaffUsers } from "@/lib/api";
+import { fetchShipments, fetchLocations, fetchStaffUsers, fetchUserProfile } from "@/lib/api";
 import { Shipment, Location, StaffUser, ShipmentStatus } from "@/lib/types";
 import { CheckpointModal } from "@/components/admin/CheckpointModal";
 import { ShipmentDetailsModal } from "@/components/admin/ShipmentDetailsModal";
@@ -142,8 +142,34 @@ export default function ShipmentsPage() {
 
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedShipmentForDetails, setSelectedShipmentForDetails] = useState<Shipment | null>(null);
-
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Current logged in user (RBAC)
+  const [currentUser, setCurrentUser] = useState<StaffUser | null>(null);
+
+  // Load User Profile on mount for RBAC
+  useEffect(() => {
+    fetchUserProfile()
+      .then((res) => {
+        if (res.success && res.data) {
+          setCurrentUser(res.data);
+        }
+      })
+      .catch((e) => console.error("Failed to load user profile in shipments page", e));
+
+    const handleProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setCurrentUser((prev) => ({
+          ...prev,
+          ...customEvent.detail,
+        }));
+      }
+    };
+
+    window.addEventListener("user-profile-updated", handleProfileUpdate);
+    return () => window.removeEventListener("user-profile-updated", handleProfileUpdate);
+  }, []);
 
   // Load locations and staff for dropdowns
   useEffect(() => {
@@ -636,6 +662,7 @@ export default function ShipmentsPage() {
         locations={locations}
         shipment={selectedShipmentForCheckpoint}
         allShipments={data}
+        userRole={currentUser?.role}
       />
 
       {/* 360-degree Shipment Details & Timeline Modal */}

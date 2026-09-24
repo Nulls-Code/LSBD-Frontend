@@ -31,8 +31,8 @@ import {
   ExternalLink
 } from "lucide-react";
 import clsx from "clsx";
-import { fetchLocations, fetchShipments, fetchShipmentById } from "@/lib/api";
-import { Location, Shipment, ShipmentStatus } from "@/lib/types";
+import { fetchLocations, fetchShipments, fetchShipmentById, fetchUserProfile } from "@/lib/api";
+import { Location, Shipment, ShipmentStatus, StaffUser } from "@/lib/types";
 import { CheckpointModal } from "@/components/admin/CheckpointModal";
 import { CreateRequestModal } from "@/components/admin/CreateRequestModal";
 import { ShipmentDetailsModal } from "@/components/admin/ShipmentDetailsModal";
@@ -222,6 +222,32 @@ export default function DashboardPage() {
   const [trackResult, setTrackResult] = useState<Shipment | null>(null);
   const [trackError, setTrackError] = useState<string | null>(null);
   const [trackLoading, setTrackLoading] = useState(false);
+
+  // Current logged in user (RBAC)
+  const [currentUser, setCurrentUser] = useState<StaffUser | null>(null);
+
+  useEffect(() => {
+    fetchUserProfile()
+      .then((res) => {
+        if (res.success && res.data) {
+          setCurrentUser(res.data);
+        }
+      })
+      .catch((e) => console.error("Failed to load user profile in dashboard page", e));
+
+    const handleProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setCurrentUser((prev) => ({
+          ...prev,
+          ...customEvent.detail,
+        }));
+      }
+    };
+
+    window.addEventListener("user-profile-updated", handleProfileUpdate);
+    return () => window.removeEventListener("user-profile-updated", handleProfileUpdate);
+  }, []);
 
   const fetchApi = async (url: string) => {
     const res = await fetch(url, { credentials: "include" });
@@ -639,6 +665,7 @@ export default function DashboardPage() {
           locations={locations}
           shipment={selectedShipmentForCheckpoint}
           allShipments={allActiveShipments}
+          userRole={currentUser?.role}
         />
       )}
 
