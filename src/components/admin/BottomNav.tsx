@@ -14,9 +14,11 @@ import {
   Settings,
   LogOut,
   X,
-  ChevronRight
+  ChevronRight,
+  Bell
 } from "lucide-react";
 import clsx from "clsx";
+import { useNotifications } from "@/context/NotificationContext";
 
 interface NavItem {
   name: string;
@@ -36,6 +38,7 @@ export function BottomNav() {
   const router = useRouter();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [user, setUser] = useState<{ name: string; role: string; initials: string } | null>(null);
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -84,7 +87,8 @@ export function BottomNav() {
   };
 
   const isAdmin = !user || user.role === "ADMIN" || user.role === "SUPER_ADMIN";
-  const isMoreActive = pathname.startsWith("/admin/customers") || 
+  const isMoreActive = pathname.startsWith("/admin/notifications") ||
+                       pathname.startsWith("/admin/customers") || 
                        pathname.startsWith("/admin/users") || 
                        pathname.startsWith("/admin/profile");
 
@@ -129,7 +133,12 @@ export function BottomNav() {
             {(isMoreActive || isMoreOpen) && (
               <span className="absolute top-0 w-8 h-0.5 bg-sky-400 rounded-full" />
             )}
-            <MoreHorizontal className="h-5 w-5" />
+            <div className="relative">
+              <MoreHorizontal className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0B1E36]" />
+              )}
+            </div>
             <span className="text-[10px] tracking-tight">More</span>
           </button>
         </div>
@@ -175,6 +184,32 @@ export function BottomNav() {
               <div className="text-[11px] font-bold text-slate-400 tracking-wider uppercase px-2 mb-2">
                 Additional Modules
               </div>
+
+              <Link
+                href="/admin/notifications"
+                onClick={() => setIsMoreOpen(false)}
+                className={clsx(
+                  "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-colors",
+                  pathname === "/admin/notifications" 
+                    ? "bg-slate-800 text-sky-400 font-semibold" 
+                    : "text-slate-200 hover:bg-slate-800/60"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 rounded-lg bg-slate-800 text-slate-300">
+                    <Bell className="w-4 h-4" />
+                  </div>
+                  <span>Notifications</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-rose-500 text-white leading-none">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-slate-500" />
+                </div>
+              </Link>
 
               <Link
                 href="/admin/customers"

@@ -19,7 +19,9 @@ import {
   UpdateUserInput,
   StaffUser,
   Shipment,
-  UpdateShipmentInput
+  UpdateShipmentInput,
+  NotificationListResponse,
+  UnreadCountResponse
 } from "./types";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://lsbd-backend.vercel.app";
@@ -728,6 +730,129 @@ export async function changePassword(
     (errorObj as unknown as { status: number; errors?: Record<string, string[]>; code?: string }).errors = resJson.error?.errors;
     (errorObj as unknown as { status: number; errors?: Record<string, string[]>; code?: string }).code = resJson.error?.code;
     throw errorObj;
+  }
+
+  return resJson;
+}
+
+// ──────────────────────────────────────────────
+// Notification Endpoints (PDF Spec & Backend /api/v1/notifications)
+// ──────────────────────────────────────────────
+
+export async function fetchNotifications(
+  page: number = 1,
+  limit: number = 20,
+  unreadOnly?: boolean
+): Promise<NotificationListResponse> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+
+  if (unreadOnly !== undefined) {
+    params.append("unreadOnly", unreadOnly.toString());
+  }
+
+  const response = await fetch(`${API_BASE_URL}/notifications?${params.toString()}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return {
+        success: false,
+        data: [],
+        meta: { page, limit, total: 0, totalPages: 1 },
+        message: "Notifications endpoint not found on current backend",
+      };
+    }
+    throw new Error(`Failed to fetch notifications: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function fetchUnreadCount(): Promise<UnreadCountResponse> {
+  const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return {
+        success: false,
+        data: { count: 0 },
+        message: "Unread count endpoint not found on current backend",
+      };
+    }
+    throw new Error(`Failed to fetch unread notification count: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function markNotificationAsRead(
+  id: string
+): Promise<{ success: boolean; data: null; message?: string }> {
+  const response = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const resJson = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(resJson.error?.message || resJson.message || "Failed to mark notification as read");
+  }
+
+  return resJson;
+}
+
+export async function markAllNotificationsAsRead(): Promise<{
+  success: boolean;
+  data: { count: number };
+  message?: string;
+}> {
+  const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const resJson = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(resJson.error?.message || resJson.message || "Failed to mark all notifications as read");
+  }
+
+  return resJson;
+}
+
+export async function deleteNotification(
+  id: string
+): Promise<{ success: boolean; data: null; message?: string }> {
+  const response = await fetch(`${API_BASE_URL}/notifications/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const resJson = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(resJson.error?.message || resJson.message || "Failed to delete notification");
   }
 
   return resJson;

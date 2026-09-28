@@ -11,15 +11,18 @@ import {
   Building2, 
   Users, 
   UserCog, 
-  Settings
+  Settings,
+  Bell
 } from "lucide-react";
 import clsx from "clsx";
+import { useNotifications } from "@/context/NotificationContext";
 
 const navGroups = [
   {
     title: "OPERATIONS",
     links: [
       { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+      { name: "Notifications", href: "/admin/notifications", icon: Bell },
       { name: "Courier Requests", href: "/admin/requests", icon: ClipboardList },
       { name: "Shipments", href: "/admin/shipments", icon: Truck },
     ]
@@ -48,6 +51,7 @@ const navGroups = [
 export function Sidebar() {
   const pathname = usePathname();
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -150,14 +154,21 @@ export function Sidebar() {
                     key={link.name}
                     href={link.href}
                     className={clsx(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                      "flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
                       isActive 
                         ? "bg-slate-800 text-white font-medium border-l-2 border-emerald-500" 
                         : "hover:bg-slate-800/50 hover:text-slate-200"
                     )}
                   >
-                    <link.icon className={clsx("h-4 w-4", isActive ? "text-emerald-500" : "text-slate-500")} />
-                    {link.name}
+                    <div className="flex items-center gap-3">
+                      <link.icon className={clsx("h-4 w-4", isActive ? "text-emerald-500" : "text-slate-500")} />
+                      <span>{link.name}</span>
+                    </div>
+                    {link.href === "/admin/notifications" && unreadCount > 0 && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-rose-500 text-white leading-none">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

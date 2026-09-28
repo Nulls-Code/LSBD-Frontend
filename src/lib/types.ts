@@ -454,3 +454,53 @@ export interface StaffResponse {
   meta?: PaginatedMeta;
   message?: string;
 }
+
+// ──────────────────────────────────────────────
+// Notification Types (Backend /api/v1/notifications)
+// ──────────────────────────────────────────────
+
+export type NotificationType =
+  // Courier Requests
+  | 'REQUEST_SUBMITTED'
+  | 'REQUEST_APPROVED'
+  | 'REQUEST_REJECTED'
+  | 'REQUEST_CANCELLED'
+  // Shipments
+  | 'SHIPMENT_CREATED'
+  | 'SHIPMENT_ASSIGNED'
+  | 'SHIPMENT_UPDATED'
+  | 'SHIPMENT_STATUS_CHANGED'
+  // Tracking
+  | 'TRACKING_CHECKPOINT'
+  // User Management
+  | 'USER_CREATED'
+  | 'USER_DEACTIVATED'
+  | 'USER_REACTIVATED'
+  | 'USER_PASSWORD_RESET';
+
+export interface NotificationItem {
+  id: string;
+  userId?: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  metadata?: Record<string, any> | null;
+  isRead: boolean;
+  readAt?: string | null;
+  createdAt: string;
+}
+
+export interface NotificationListResponse {
+  success: boolean;
+  data: NotificationItem[];
+  meta: PaginatedMeta;
+  message?: string;
+}
+
+export interface UnreadCountResponse {
+  success: boolean;
+  data: {
+    count: number;
+  };
+  message?: string;
+}
