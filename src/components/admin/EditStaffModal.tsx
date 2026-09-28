@@ -83,8 +83,8 @@ export function EditStaffModal({ isOpen, user, isSelf, onClose, onSuccess }: Edi
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="bg-[#0B132B] text-white px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -177,7 +177,7 @@ export function EditStaffModal({ isOpen, user, isSelf, onClose, onSuccess }: Edi
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Operational Role
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 type="button"
                 disabled={isSelf}

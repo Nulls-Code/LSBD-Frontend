@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { 
   Plus, Search, ChevronDown, RefreshCw, 
-  Loader2, AlertCircle, Building2
+  Loader2, AlertCircle, Building2, MapPin
 } from "lucide-react";
 import clsx from "clsx";
 import { fetchLocations } from "@/lib/api";
@@ -100,19 +100,21 @@ export default function HubDirectoryPage() {
   const isAdmin = userRole === "ADMIN";
 
   return (
-    <div className="p-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F8FAFC]">
+    <div className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F8FAFC]">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
+      <div className="flex items-start justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#0B132B] tracking-tight">Hub Directory</h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B1E36] tracking-tight leading-tight">
+            Locations<br className="sm:hidden" /> <span className="text-xl sm:text-3xl font-bold sm:font-extrabold text-[#0B1E36]">(Hub Directory)</span>
+          </h1>
+          <p className="hidden sm:block text-slate-500 text-sm font-medium mt-1">
             Operational locations, availability, and current shipment workload.
           </p>
         </div>
         {isAdmin && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-[#0B132B] hover:bg-[#1E293B] text-white px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors shadow-sm self-start sm:self-auto cursor-pointer"
+            className="bg-[#0B1E36] hover:bg-[#132A4B] text-white px-3.5 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer shrink-0 mt-1 sm:mt-0"
           >
             <Plus className="w-4 h-4" />
             Create Hub
@@ -120,8 +122,20 @@ export default function HubDirectoryPage() {
         )}
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      {/* Mobile Search Input (Visible < md, matching Mobile Mockup) */}
+      <div className="relative w-full mb-4 md:hidden">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search name, code, city, or country"
+          className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-2xs text-slate-800"
+        />
+      </div>
+
+      {/* Desktop Filter Bar (Visible md+) */}
+      <div className="hidden md:flex flex-wrap items-center justify-between gap-4 mb-6">
         {/* Search */}
         <div className="relative flex-1 min-w-[280px] max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
@@ -165,8 +179,135 @@ export default function HubDirectoryPage() {
         </div>
       </div>
 
-      {/* Main Hub Table Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      {/* Mobile Card List (Visible < md, matching Mobile Mockup) */}
+      <div className="md:hidden space-y-3 mb-4">
+        {loading && data.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
+            <span className="text-xs">Loading hub directory...</span>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-rose-500 text-xs">
+            <AlertCircle className="w-6 h-6 mx-auto mb-2 text-rose-500" />
+            <p className="font-semibold">{error}</p>
+            <button
+              onClick={loadData}
+              className="mt-2 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1 rounded-md border border-rose-200 font-medium"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : data.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-500 text-xs shadow-2xs">
+            No hubs found.
+          </div>
+        ) : (
+          data.map((hub) => {
+            const isActive = hub.isActive !== false;
+            const currentShipments = hub._count?.currentShipments ?? 0;
+
+            return (
+              <div
+                key={hub.id}
+                onClick={() => {
+                  if (isAdmin) {
+                    setSelectedHubForDeactivation(hub);
+                    setIsDeactivateModalOpen(true);
+                  }
+                }}
+                className={clsx(
+                  "bg-white rounded-2xl border border-slate-100 p-4 shadow-xs hover:border-blue-200 transition-all flex items-start justify-between gap-3",
+                  isAdmin && "cursor-pointer"
+                )}
+              >
+                {/* Left: Icon + Hub Info */}
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 rounded-xl bg-[#0B1E36] flex items-center justify-center text-white shrink-0 mt-0.5 shadow-2xs">
+                    <MapPin className="w-5 h-5 text-white" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-slate-900 text-sm sm:text-base leading-snug truncate">
+                      {hub.name}
+                    </div>
+
+                    {/* Code pill & Active/Inactive status */}
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="bg-[#0B1E36] text-white font-mono text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wider">
+                        {hub.code}
+                      </span>
+
+                      <div className="flex items-center gap-1.5 text-xs font-semibold">
+                        <span
+                          className={clsx(
+                            "w-1.5 h-1.5 rounded-full",
+                            isActive ? "bg-emerald-500" : "bg-slate-400"
+                          )}
+                        />
+                        <span className={isActive ? "text-emerald-600" : "text-slate-400"}>
+                          {isActive ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* City, Country */}
+                    <div className="text-xs text-slate-600 font-medium mt-1.5 truncate">
+                      {hub.city}{hub.country ? `, ${hub.country}` : ""}
+                    </div>
+
+                    {/* Address */}
+                    <div className="text-xs text-slate-400 truncate mt-0.5">
+                      {hub.address || "—"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Shipments Counter */}
+                <div className="shrink-0 text-right pt-0.5">
+                  <div className="font-bold text-2xl text-[#0B1E36] leading-none">
+                    {currentShipments}
+                  </div>
+                  <div className="text-[9px] font-bold text-slate-400 tracking-wider uppercase mt-1">
+                    SHIPMENTS
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Mobile Pagination (Visible < md, matching Mobile Mockup) */}
+      <div className="flex md:hidden items-center justify-between my-4 text-xs text-slate-500">
+        <div>
+          Showing <span className="font-semibold text-slate-700">
+            {startRecord}–{endRecord}
+          </span> of <span className="font-semibold text-slate-700">{totalRecords}</span> records
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button 
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-medium shadow-2xs disabled:opacity-40 cursor-pointer"
+          >
+            Prev
+          </button>
+          <span className="bg-[#0284C7] text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-xs">
+            {page}
+          </span>
+          <button 
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages || totalPages <= 1}
+            className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-medium shadow-2xs disabled:opacity-40 cursor-pointer"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      {/* Main Hub Table Card (Hidden on mobile < md) */}
+      <div className="hidden md:flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto min-h-[380px]">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-[#0B192C] text-slate-300 text-xs font-semibold tracking-wider uppercase">

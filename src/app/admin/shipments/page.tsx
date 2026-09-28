@@ -114,6 +114,77 @@ function StatusBadge({ status }: { status: ShipmentStatus | string }) {
   }
 }
 
+function MobileShipmentStatusBadge({ status }: { status: ShipmentStatus | string }) {
+  switch (status) {
+    case "ARRIVED_AT_HUB":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-purple-400 text-purple-700 bg-white shadow-2xs">
+          Arrived at Hub
+        </span>
+      );
+    case "IN_TRANSIT":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-blue-400 text-blue-600 bg-white shadow-2xs">
+          In Transit
+        </span>
+      );
+    case "OUT_FOR_DELIVERY":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-orange-400 text-orange-600 bg-white shadow-2xs">
+          Out for Delivery
+        </span>
+      );
+    case "ON_HOLD":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-amber-500 text-amber-600 bg-white shadow-2xs">
+          On Hold
+        </span>
+      );
+    case "DELIVERED":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-emerald-500 text-emerald-600 bg-white shadow-2xs">
+          Delivered
+        </span>
+      );
+    case "PROCESSING":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-sky-400 text-sky-600 bg-white shadow-2xs">
+          Processing
+        </span>
+      );
+    case "FAILED_DELIVERY":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-rose-400 text-rose-600 bg-white shadow-2xs">
+          Failed Delivery
+        </span>
+      );
+    case "RETURNED":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-slate-400 text-slate-600 bg-white shadow-2xs">
+          Returned
+        </span>
+      );
+    case "CANCELLED":
+    default:
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-slate-300 text-slate-500 bg-white shadow-2xs">
+          Cancelled
+        </span>
+      );
+  }
+}
+
+function formatMobileDate(dateString?: string | null): string {
+  if (!dateString) return "—";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "—";
+    return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(d);
+  } catch {
+    return "—";
+  }
+}
+
 export default function ShipmentsPage() {
   const [data, setData] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -368,12 +439,12 @@ export default function ShipmentsPage() {
   const endRecord = Math.min(page * pageSize, totalRecords);
 
   return (
-    <div className="p-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F8FAFC]">
+    <div className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F8FAFC]">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
+      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#0B132B] tracking-tight">Shipments</h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B1E36] tracking-tight">Shipments</h1>
+          <p className="hidden sm:block text-slate-500 text-sm font-medium mt-1">
             Search, inspect, and update active international shipments.
           </p>
         </div>
@@ -382,15 +453,27 @@ export default function ShipmentsPage() {
             setSelectedShipmentForCheckpoint(null);
             setIsCheckpointModalOpen(true);
           }}
-          className="bg-[#1e293b] hover:bg-[#0f1b3b] text-white px-4 py-2.5 rounded-md flex items-center gap-2 text-sm font-semibold transition-colors shadow-sm self-start sm:self-auto cursor-pointer"
+          className="bg-[#0B1E36] hover:bg-[#132A4B] text-white px-3.5 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           Log Checkpoint
         </button>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
+      {/* Mobile Search Input (Visible < md, matching Mobile Design Mockup) */}
+      <div className="relative w-full mb-4 md:hidden">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search tracking number"
+          className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-2xs text-slate-800"
+        />
+      </div>
+
+      {/* Desktop Filter Bar (Visible md+) */}
+      <div className="hidden md:flex flex-wrap items-center gap-3 mb-6">
         {/* Search */}
         <div className="relative flex-1 min-w-[240px] max-w-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -445,8 +528,154 @@ export default function ShipmentsPage() {
         </button>
       </div>
 
-      {/* Table Container */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      {/* Mobile Card List (Visible < md, matching Mobile Screenshot) */}
+      <div className="md:hidden space-y-3 mb-4">
+        {loading && data.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
+            <span className="text-xs">Loading shipments...</span>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-rose-500 text-xs">
+            <AlertCircle className="w-6 h-6 mx-auto mb-2 text-rose-500" />
+            <p className="font-semibold">{error}</p>
+            <button
+              onClick={loadData}
+              className="mt-2 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1 rounded-md border border-rose-200 font-medium"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : data.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-500 text-xs shadow-2xs">
+            No shipments found.
+          </div>
+        ) : (
+          data.map((shipment) => {
+            const currentHub =
+              shipment.currentLocation?.city ||
+              shipment.currentLocation?.name ||
+              shipment.originLocation?.city ||
+              "In Transit";
+
+            const assignedStaffName = shipment.assignedTo
+              ? `${shipment.assignedTo.firstName || ""} ${shipment.assignedTo.lastName || ""}`.trim()
+              : "—";
+
+            return (
+              <div
+                key={shipment.id}
+                onClick={() => {
+                  setSelectedShipmentForDetails(shipment);
+                  setIsDetailsModalOpen(true);
+                }}
+                className="bg-white rounded-2xl border border-slate-100 p-4 shadow-xs space-y-3 cursor-pointer hover:border-blue-200 transition-all"
+              >
+                {/* Top Row: Tracking Number + Copy button, Sender & Recipient, Status Pill */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-blue-600">
+                      <span>{shipment.trackingNumber}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopy(shipment.trackingNumber, shipment.id);
+                        }}
+                        className="text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                        title="Copy tracking number"
+                      >
+                        {copiedId === shipment.id ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="text-base font-bold text-slate-900 leading-snug mt-0.5 truncate">
+                      {shipment.senderName}
+                    </div>
+                    <div className="text-xs text-slate-500 truncate">
+                      {shipment.recipientName}
+                    </div>
+                  </div>
+
+                  <div className="shrink-0">
+                    <MobileShipmentStatusBadge status={shipment.currentStatus} />
+                  </div>
+                </div>
+
+                {/* 2x2 Details Grid */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs pt-1">
+                  {/* ROUTE */}
+                  <div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ROUTE</div>
+                    <div className="font-semibold text-slate-800 mt-0.5 truncate">
+                      {shipment.originLocation?.city || "Origin"} → {shipment.destinationLocation?.city || "Destination"}
+                    </div>
+                  </div>
+
+                  {/* CURRENT HUB */}
+                  <div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CURRENT HUB</div>
+                    <div className="font-semibold text-slate-800 mt-0.5 truncate">
+                      {currentHub}
+                    </div>
+                  </div>
+
+                  {/* EST. DELIVERY */}
+                  <div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">EST. DELIVERY</div>
+                    <div className="font-semibold text-slate-800 mt-0.5">
+                      {formatMobileDate(shipment.estimatedDeliveryDate)}
+                    </div>
+                  </div>
+
+                  {/* ASSIGNED */}
+                  <div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">ASSIGNED</div>
+                    <div className="font-semibold text-slate-800 mt-0.5 truncate">
+                      {assignedStaffName}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Mobile Pagination (Visible < md, matching Mobile Screenshot) */}
+      <div className="flex md:hidden items-center justify-between my-4 text-xs text-slate-500">
+        <div>
+          Showing <span className="font-semibold text-slate-700">
+            {startRecord}–{endRecord}
+          </span> of <span className="font-semibold text-slate-700">{totalRecords}</span> records
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button 
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-medium shadow-2xs disabled:opacity-40 cursor-pointer"
+          >
+            Prev
+          </button>
+          <span className="bg-[#0284C7] text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-xs">
+            {page}
+          </span>
+          <button 
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages || totalPages <= 1}
+            className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-medium shadow-2xs disabled:opacity-40 cursor-pointer"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      {/* Table Container (Hidden on mobile < md) */}
+      <div className="hidden md:flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto min-h-[380px]">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-[#0f1b3b] text-slate-300 text-xs font-semibold tracking-wider">

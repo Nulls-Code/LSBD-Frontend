@@ -3,12 +3,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { 
   Search, SlidersHorizontal, ChevronDown, 
-  Loader2, AlertCircle, RefreshCw, X
+  Loader2, AlertCircle, RefreshCw, X, Phone, Mail
 } from "lucide-react";
 import clsx from "clsx";
 import { fetchCustomers } from "@/lib/api";
 import { CustomerListItem } from "@/lib/types";
 import { CustomerDetailsModal } from "@/components/admin/CustomerDetailsModal";
+
+function getCustomerInitials(companyOrName: string): string {
+  if (!companyOrName) return "C";
+  const words = companyOrName.trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return companyOrName.slice(0, 2).toUpperCase();
+}
 
 export default function CustomerDirectoryPage() {
   const [customers, setCustomers] = useState<CustomerListItem[]>([]);
@@ -134,19 +143,19 @@ export default function CustomerDirectoryPage() {
   };
 
   return (
-    <div className="p-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F0F4F8]">
+    <div className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F0F4F8]">
       {/* Top Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-extrabold text-[#0B132B] tracking-tight">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B1E36] tracking-tight">
           Customer Directory
         </h1>
-        <p className="text-slate-500 text-sm font-medium mt-1">
+        <p className="hidden sm:block text-slate-500 text-sm font-medium mt-1">
           Courier profiles, request history, and shipment relationships.
         </p>
       </div>
 
       {/* Search and Filters Bar */}
-      <div className="flex items-center gap-3.5 mb-6">
+      <div className="flex items-center gap-3.5 mb-4 sm:mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           <input
@@ -154,7 +163,7 @@ export default function CustomerDirectoryPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search company, name, phone, or email"
-            className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all shadow-xs"
+            className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all shadow-xs"
           />
           {searchInput && (
             <button
@@ -169,7 +178,7 @@ export default function CustomerDirectoryPage() {
         <button
           onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
           className={clsx(
-            "flex items-center gap-2 px-4 py-2.5 border rounded-lg text-sm font-semibold transition-colors shadow-xs cursor-pointer shrink-0",
+            "hidden md:flex items-center gap-2 px-4 py-2.5 border rounded-lg text-sm font-semibold transition-colors shadow-xs cursor-pointer shrink-0",
             isFilterPanelOpen || sortBy !== "recent" || filterMinShipments > 0
               ? "bg-[#0B132B] text-white border-[#0B132B]"
               : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -183,9 +192,9 @@ export default function CustomerDirectoryPage() {
         </button>
       </div>
 
-      {/* Expandable Filter Panel */}
+      {/* Expandable Filter Panel (Desktop) */}
       {isFilterPanelOpen && (
-        <div className="mb-6 p-4 bg-white border border-slate-200 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-4 animate-in fade-in duration-100">
+        <div className="hidden md:flex mb-6 p-4 bg-white border border-slate-200 rounded-xl shadow-xs flex-wrap items-center justify-between gap-4 animate-in fade-in duration-100">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-500">Sort By:</span>
@@ -242,8 +251,125 @@ export default function CustomerDirectoryPage() {
         </div>
       )}
 
-      {/* Table Container Card */}
-      <div className="bg-white rounded-xl shadow-xs border border-[#162238]/80 overflow-hidden flex flex-col">
+      {/* Mobile Customer Cards List (Visible < md, matching Mobile Screenshot) */}
+      <div className="md:hidden space-y-3 mb-4">
+        {loading && customers.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
+            <span className="text-xs">Loading customer directory...</span>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-rose-500 text-xs">
+            <AlertCircle className="w-6 h-6 mx-auto mb-2 text-rose-500" />
+            <p className="font-semibold">{error}</p>
+            <button
+              onClick={loadCustomers}
+              className="mt-2 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1 rounded-md border border-rose-200 font-medium"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : displayedCustomers.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-500 text-xs shadow-2xs">
+            No customer records found.
+          </div>
+        ) : (
+          displayedCustomers.map((cust) => {
+            const companyName = cust.company?.trim() || cust.name;
+            const contactPerson = cust.company?.trim() ? cust.name : "—";
+            const totalShipments = cust._count?.courierRequests ?? 0;
+
+            return (
+              <div
+                key={cust.id}
+                className="bg-white rounded-2xl border border-slate-100 p-4 shadow-xs hover:border-blue-200 transition-all space-y-3"
+              >
+                {/* Top Row: Avatar + Names on Left, Total Shipments on Right */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-full bg-[#1A3150] flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-2xs">
+                      {getCustomerInitials(companyName)}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-slate-900 text-sm sm:text-base leading-snug truncate">
+                        {companyName}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5 truncate">
+                        {contactPerson !== "—" ? contactPerson : cust.name}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Total Shipments */}
+                  <div className="shrink-0 text-right">
+                    <div className="font-bold text-xl sm:text-2xl text-[#0B1E36] leading-none">
+                      {totalShipments}
+                    </div>
+                    <div className="text-[9px] font-bold text-slate-400 tracking-wider uppercase mt-1">
+                      SHIPMENTS
+                    </div>
+                  </div>
+                </div>
+
+                {/* Middle: Phone & Email */}
+                <div className="space-y-1 text-xs pt-1">
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="font-medium">{cust.phone || "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-500">
+                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{cust.email || "—"}</span>
+                  </div>
+                </div>
+
+                {/* Bottom Row: View Button on Right */}
+                <div className="flex justify-end pt-1">
+                  <button
+                    onClick={() => handleOpenDetails(cust.id)}
+                    className="border border-slate-200 hover:border-blue-300 bg-white text-blue-600 hover:bg-blue-50/50 px-5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Mobile Pagination (Visible < md, matching Mobile Screenshot) */}
+      <div className="flex md:hidden items-center justify-between my-4 text-xs text-slate-500">
+        <div>
+          Showing <span className="font-semibold text-slate-700">
+            {startRecord}–{endRecord}
+          </span> of <span className="font-semibold text-slate-700">{totalRecords}</span> records
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button 
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-medium shadow-2xs disabled:opacity-40 cursor-pointer"
+          >
+            Prev
+          </button>
+          <span className="bg-[#0284C7] text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-xs">
+            {page}
+          </span>
+          <button 
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages || totalPages <= 1}
+            className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-medium shadow-2xs disabled:opacity-40 cursor-pointer"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      {/* Table Container Card (Hidden on mobile < md) */}
+      <div className="hidden md:flex flex-col bg-white rounded-xl shadow-xs border border-[#162238]/80 overflow-hidden">
         {/* Table Content */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">

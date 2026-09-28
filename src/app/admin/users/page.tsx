@@ -4,10 +4,11 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
-  Shield, Plus, MoreHorizontal, UserCog, KeyRound, 
+  Shield, Plus, MoreHorizontal, MoreVertical, UserCog, KeyRound, 
   UserX, UserCheck, CheckCircle2, RefreshCw, Loader2, AlertCircle,
   ShieldAlert, Lock, ArrowLeft, Truck
 } from "lucide-react";
+import clsx from "clsx";
 import { fetchUsers, fetchUserProfile } from "@/lib/api";
 import { StaffUser } from "@/lib/types";
 import { RegisterStaffModal } from "@/components/admin/RegisterStaffModal";
@@ -21,8 +22,8 @@ export default function AdministrationManagementPage() {
   // RBAC Access Guard State
   const [authStatus, setAuthStatus] = useState<"checking" | "authorized" | "unauthorized">("checking");
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
-  const [currentUserEmail, setCurrentUserEmail] = useState("aminul@lsbd.demo");
-  const [currentUserId, setCurrentUserId] = useState("usr-admin-01");
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
 
   const [users, setUsers] = useState<StaffUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,6 @@ export default function AdministrationManagementPage() {
 
   // Dropdown state
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Modals state
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -122,17 +122,6 @@ export default function AdministrationManagementPage() {
       window.removeEventListener("user-profile-updated", handleProfileUpdate);
     };
   }, [loadUsers]);
-
-  // Click outside listener for action dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setActiveDropdownId(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Format date as "04 Jan 2025"
   const formatDate = (dateStr?: string) => {
@@ -290,7 +279,7 @@ export default function AdministrationManagementPage() {
 
   // 3. Authorized Administrator View
   return (
-    <div className="p-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F8FAFC]">
+    <div className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8 w-full max-w-7xl mx-auto min-h-screen bg-[#F8FAFC]">
       {/* Toast Alert */}
       {successToast && (
         <div className="fixed top-20 right-8 z-50 flex items-center gap-2.5 px-4 py-3 bg-[#0B132B] text-white rounded-lg shadow-xl border border-slate-700 animate-in fade-in slide-in-from-top-4 duration-200">
@@ -300,40 +289,242 @@ export default function AdministrationManagementPage() {
       )}
 
       {/* Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#0B132B] tracking-tight">
-            Administration Management
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B1E36] tracking-tight leading-tight">
+            Administration<br className="sm:hidden" /> <span className="text-2xl sm:text-3xl font-extrabold text-[#0B1E36]">Management</span>
           </h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">
+          <p className="hidden sm:block text-slate-500 text-sm font-medium mt-1">
             Security-sensitive staff access, roles, and account status.
           </p>
         </div>
 
         <button
           onClick={() => setIsRegisterModalOpen(true)}
-          className="bg-[#0B132B] hover:bg-[#1E293B] text-white px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors shadow-xs self-start sm:self-auto cursor-pointer"
+          className="bg-[#0B1E36] hover:bg-[#132A4B] text-white px-3.5 sm:px-4 py-2 rounded-xl flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors shadow-xs cursor-pointer shrink-0 mt-1 sm:mt-0"
         >
           <Plus className="w-4 h-4" />
-          Register New Staff
+          Register Staff
         </button>
       </div>
 
       {/* Info Warning Banner */}
-      <div className="bg-[#0B1A30] border border-slate-800 rounded-xl p-4 sm:p-5 mb-6 flex items-start gap-3.5 shadow-xs">
-        <Shield className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+      <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl p-4 mb-4 sm:mb-6 flex items-start gap-3 shadow-2xs">
+        <Shield className="w-5 h-5 text-[#0B1E36] shrink-0 mt-0.5" />
         <div>
-          <h4 className="text-white text-sm font-semibold leading-tight">
+          <h4 className="text-[#0B1E36] text-sm font-bold leading-tight">
             Role changes affect operational authority.
           </h4>
-          <p className="text-slate-400 text-xs mt-1 leading-normal">
+          <p className="text-[#0284C7] text-xs mt-1 leading-normal font-medium">
             All staff administration actions should be confirmed and auditable.
           </p>
         </div>
       </div>
 
-      {/* Table Card */}
-      <div className="bg-[#EAF5FF] border border-[#A5B4C2] rounded-xl overflow-hidden shadow-xs">
+      {/* Mobile Staff Card List (Visible < md, matching Mobile Mockup) */}
+      <div className="md:hidden space-y-3 mb-4">
+        {loading && users.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
+            <span className="text-xs">Loading staff directory...</span>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-rose-500 text-xs">
+            <AlertCircle className="w-6 h-6 mx-auto mb-2 text-rose-500" />
+            <p className="font-semibold">{error}</p>
+            <button
+              onClick={loadUsers}
+              className="mt-2 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1 rounded-md border border-rose-200 font-medium"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-500 text-xs shadow-2xs">
+            No staff accounts found.
+          </div>
+        ) : (
+          users.map((staff) => {
+            const isSelf =
+              staff.email === currentUserEmail ||
+              staff.id === currentUserId;
+
+            const fullName = `${staff.firstName || ""} ${staff.lastName || ""}`.trim() || "Staff Member";
+            const initials = getInitials(staff.firstName, staff.lastName);
+            const isActive = staff.isActive !== false;
+
+            return (
+              <div
+                key={staff.id}
+                className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs hover:border-slate-300 transition-all space-y-3 relative"
+              >
+                {/* Top Row: Avatar + Name/Role/Email on Left, Three Dots on Right */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div className="w-11 h-11 rounded-full bg-[#111C2E] flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-2xs mt-0.5">
+                      {initials}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5 leading-snug">
+                        <span className="font-bold text-slate-900 text-sm sm:text-base">
+                          {fullName}
+                        </span>
+                        {isSelf && (
+                          <span className="text-slate-400 font-semibold text-xs">
+                            (You)
+                          </span>
+                        )}
+                        {staff.role === "ADMIN" && (
+                          <span className="bg-[#A855F7] text-white font-bold text-[10px] px-2 py-0.5 rounded-md tracking-wider uppercase ml-1">
+                            ADMIN
+                          </span>
+                        )}
+                        {staff.role === "MANAGER" && (
+                          <span className="bg-[#0284C7] text-white font-bold text-[10px] px-2 py-0.5 rounded-md tracking-wider uppercase ml-1">
+                            MANAGER
+                          </span>
+                        )}
+                        {staff.role === "EMPLOYEE" && (
+                          <span className="bg-[#334E48] text-white font-bold text-[10px] px-2 py-0.5 rounded-md tracking-wider uppercase ml-1">
+                            EMPLOYEE
+                          </span>
+                        )}
+                        {staff.role !== "ADMIN" && staff.role !== "MANAGER" && staff.role !== "EMPLOYEE" && (
+                          <span className="bg-slate-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-md tracking-wider uppercase ml-1">
+                            {staff.role}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="text-xs text-slate-500 mt-0.5 truncate">
+                        {staff.email}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Three-dots menu */}
+                  <div className="relative shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setActiveDropdownId(activeDropdownId === staff.id ? null : staff.id)}
+                      className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 transition-colors cursor-pointer"
+                      title="Staff actions"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+
+                    {/* Mobile Dropdown Menu */}
+                    {activeDropdownId === staff.id && (
+                      <>
+                        {/* Transparent click-outside backdrop */}
+                        <div
+                          className="fixed inset-0 z-40 cursor-default"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdownId(null);
+                          }}
+                        />
+
+                        <div
+                          className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveDropdownId(null);
+                              setSelectedUserForEdit(staff);
+                            }}
+                            className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 font-medium transition-colors cursor-pointer text-left"
+                          >
+                            <UserCog className="w-4 h-4 text-blue-600 shrink-0" />
+                            <span>Edit Role &amp; Info</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveDropdownId(null);
+                              setSelectedUserForReset(staff);
+                            }}
+                            className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 font-medium transition-colors cursor-pointer text-left"
+                          >
+                            <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
+                            <span>Reset Password</span>
+                          </button>
+
+                          <div className="my-1 border-t border-slate-100" />
+
+                          {isSelf ? (
+                            <div
+                              title="You cannot deactivate your own administrative account"
+                              className="w-full px-3.5 py-2 text-slate-400 flex items-center gap-2.5 cursor-not-allowed opacity-60 font-medium"
+                            >
+                              <UserX className="w-4 h-4 text-slate-400 shrink-0" />
+                              <span>Deactivate Account</span>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDropdownId(null);
+                                setSelectedUserForDeactivate(staff);
+                              }}
+                              className={`w-full px-3.5 py-2 flex items-center gap-2.5 font-medium transition-colors cursor-pointer text-left ${
+                                isActive
+                                  ? "text-rose-600 hover:bg-rose-50"
+                                  : "text-emerald-600 hover:bg-emerald-50"
+                              }`}
+                            >
+                              {isActive ? (
+                                <>
+                                  <UserX className="w-4 h-4 text-rose-500 shrink-0" />
+                                  <span>Deactivate Account</span>
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                                  <span>Reactivate Account</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom Row: Status indicator on Left, Created Date on Right */}
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <div className="flex items-center gap-1.5 font-semibold">
+                    <span
+                      className={clsx(
+                        "w-1.5 h-1.5 rounded-full",
+                        isActive ? "bg-emerald-500" : "bg-slate-400"
+                      )}
+                    />
+                    <span className={isActive ? "text-emerald-600" : "text-slate-400"}>
+                      {isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+
+                  <div className="text-slate-400 text-xs">
+                    Created {formatDate(staff.createdAt)}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Table Card (Hidden on mobile < md) */}
+      <div className="hidden md:block bg-[#EAF5FF] border border-[#A5B4C2] rounded-xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-[#082A46]">
@@ -481,71 +672,88 @@ export default function AdministrationManagementPage() {
 
                         {/* Action Dropdown Popup */}
                         {activeDropdownId === staff.id && (
-                          <div
-                            ref={dropdownRef}
-                            className="absolute right-6 mt-1.5 w-48 bg-white border border-slate-200 rounded-lg shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-left"
-                          >
-                            {/* Edit Role & Name */}
-                            <button
-                              onClick={() => {
+                          <>
+                            {/* Backdrop */}
+                            <div
+                              className="fixed inset-0 z-20 cursor-default"
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setActiveDropdownId(null);
-                                setSelectedUserForEdit(staff);
                               }}
-                              className="w-full px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition-colors cursor-pointer"
+                            />
+
+                            <div
+                              className="absolute right-6 mt-1.5 w-48 bg-white border border-slate-200 rounded-lg shadow-xl py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150 text-left"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <UserCog className="w-3.5 h-3.5 text-blue-600" />
-                              Edit Profile / Role
-                            </button>
-
-                            {/* Reset Password */}
-                            <button
-                              onClick={() => {
-                                setActiveDropdownId(null);
-                                setSelectedUserForReset(staff);
-                              }}
-                              className="w-full px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition-colors cursor-pointer"
-                            >
-                              <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-                              Reset Password
-                            </button>
-
-                            <div className="my-1 border-t border-slate-100" />
-
-                            {/* Deactivate / Reactivate (Guarded against self) */}
-                            {isSelf ? (
-                              <div
-                                title="You cannot deactivate your own administrative account"
-                                className="w-full px-3.5 py-2 text-xs text-slate-400 flex items-center gap-2.5 cursor-not-allowed opacity-60"
-                              >
-                                <UserX className="w-3.5 h-3.5 text-slate-400" />
-                                Deactivate Account
-                              </div>
-                            ) : (
+                              {/* Edit Role & Name */}
                               <button
-                                onClick={() => {
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setActiveDropdownId(null);
-                                  setSelectedUserForDeactivate(staff);
+                                  setSelectedUserForEdit(staff);
                                 }}
-                                className={`w-full px-3.5 py-2 text-xs flex items-center gap-2.5 transition-colors cursor-pointer ${
-                                  isActive
-                                    ? "text-rose-600 hover:bg-rose-50"
-                                    : "text-emerald-600 hover:bg-emerald-50"
-                                }`}
+                                className="w-full px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                               >
-                                {isActive ? (
-                                  <>
-                                    <UserX className="w-3.5 h-3.5 text-rose-500" />
-                                    Deactivate Account
-                                  </>
-                                ) : (
-                                  <>
-                                    <UserCheck className="w-3.5 h-3.5 text-emerald-500" />
-                                    Reactivate Account
-                                  </>
-                                )}
+                                <UserCog className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                <span>Edit Profile / Role</span>
                               </button>
-                            )}
-                          </div>
+
+                              {/* Reset Password */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveDropdownId(null);
+                                  setSelectedUserForReset(staff);
+                                }}
+                                className="w-full px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                              >
+                                <KeyRound className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <span>Reset Password</span>
+                              </button>
+
+                              <div className="my-1 border-t border-slate-100" />
+
+                              {/* Deactivate / Reactivate (Guarded against self) */}
+                              {isSelf ? (
+                                <div
+                                  title="You cannot deactivate your own administrative account"
+                                  className="w-full px-3.5 py-2 text-xs text-slate-400 flex items-center gap-2.5 cursor-not-allowed opacity-60"
+                                >
+                                  <UserX className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <span>Deactivate Account</span>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDropdownId(null);
+                                    setSelectedUserForDeactivate(staff);
+                                  }}
+                                  className={`w-full px-3.5 py-2 text-xs flex items-center gap-2.5 transition-colors cursor-pointer text-left ${
+                                    isActive
+                                      ? "text-rose-600 hover:bg-rose-50"
+                                      : "text-emerald-600 hover:bg-emerald-50"
+                                  }`}
+                                >
+                                  {isActive ? (
+                                    <>
+                                      <UserX className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                      <span>Deactivate Account</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UserCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                      <span>Reactivate Account</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          </>
                         )}
                       </div>
                     </td>
@@ -583,8 +791,7 @@ export default function AdministrationManagementPage() {
         user={selectedUserForEdit}
         isSelf={
           selectedUserForEdit?.email === currentUserEmail ||
-          selectedUserForEdit?.id === currentUserId ||
-          (selectedUserForEdit?.email === "aminul@lsbd.demo" && currentUserEmail.includes("aminul"))
+          selectedUserForEdit?.id === currentUserId
         }
         onClose={() => setSelectedUserForEdit(null)}
         onSuccess={handleEditSuccess}

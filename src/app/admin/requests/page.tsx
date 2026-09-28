@@ -127,6 +127,37 @@ function StatusBadge({ status }: { status: string }) {
   }
 }
 
+function MobileStatusBadge({ status }: { status: string }) {
+  switch (status) {
+    case "APPROVED":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-emerald-500 text-emerald-600 bg-white shadow-2xs">
+          Approved
+        </span>
+      );
+    case "PENDING":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-amber-500 text-amber-600 bg-white shadow-2xs">
+          Awaiting
+        </span>
+      );
+    case "REJECTED":
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-rose-500 text-rose-600 bg-white shadow-2xs">
+          Rejected
+        </span>
+      );
+    case "CANCELLED":
+    default:
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-slate-400 text-slate-500 bg-white shadow-2xs">
+          Cancelled
+        </span>
+      );
+  }
+}
+
+
 export default function CourierRequestsPage() {
   const [data, setData] = useState<CourierRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -394,8 +425,16 @@ export default function CourierRequestsPage() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  const displayRequests = data;
+
+  const totalCountAll = statusCounts.ALL ?? totalRecords;
+  const countPending = statusCounts.PENDING ?? 0;
+  const countApproved = statusCounts.APPROVED ?? 0;
+  const countRejected = statusCounts.REJECTED ?? 0;
+  const countCancelled = statusCounts.CANCELLED ?? 0;
+
   return (
-    <div className="p-8 w-full max-w-7xl mx-auto min-h-screen bg-[#f8fafc]" ref={menuContainerRef}>
+    <div className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8 w-full max-w-7xl mx-auto min-h-screen bg-[#f8fafc]" ref={menuContainerRef}>
       {/* Toast Feedback Banner */}
       {toastMessage && (
         <div className={clsx(
@@ -420,24 +459,127 @@ export default function CourierRequestsPage() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#0B132B] mb-2 tracking-tight">Request Management</h1>
-          <p className="text-slate-500 text-sm font-medium">
-            Review intake, authorize shipments, and retain a clear decision record (Screen 5).
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B1E36] tracking-tight">Request Management</h1>
+          <p className="hidden sm:block text-slate-500 text-sm font-medium mt-1">
+            Review intake, authorize shipments, and retain a clear decision record.
           </p>
         </div>
         <button 
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-[#1e293b] hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm font-semibold transition-all shadow-sm active:scale-95 shrink-0"
+          className="bg-[#0B1E36] hover:bg-[#132A4B] text-white px-3.5 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
-          New Request
+          <span>New Request</span>
         </button>
       </div>
 
-      {/* Dynamic Tabs with Live Record Counts */}
-      <div className="flex items-center gap-6 border-b border-slate-200 mb-6 w-full overflow-x-auto pb-0.5">
+      {/* Mobile Filter Tabs (Visible < md, matching Screenshot) */}
+      <div className="flex md:hidden items-center gap-2 overflow-x-auto no-scrollbar pb-1 mb-3">
+        {/* All */}
+        <button
+          type="button"
+          onClick={() => handleTabClick("ALL")}
+          className={clsx(
+            "px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-2xs",
+            activeTab === "ALL" 
+              ? "bg-[#0B1E36] text-white" 
+              : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+          )}
+        >
+          <span>All</span>
+          <span className={clsx(
+            "w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center",
+            activeTab === "ALL" ? "bg-slate-700 text-white" : "bg-slate-500 text-white"
+          )}>
+            {totalCountAll}
+          </span>
+        </button>
+
+        {/* P - Pending */}
+        <button
+          type="button"
+          onClick={() => handleTabClick("PENDING")}
+          className={clsx(
+            "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-2xs",
+            activeTab === "PENDING" 
+              ? "bg-[#0B1E36] text-white" 
+              : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+          )}
+        >
+          <span>P</span>
+          <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-amber-500 text-white">
+            {countPending}
+          </span>
+        </button>
+
+        {/* A - Approved */}
+        <button
+          type="button"
+          onClick={() => handleTabClick("APPROVED")}
+          className={clsx(
+            "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-2xs",
+            activeTab === "APPROVED" 
+              ? "bg-[#0B1E36] text-white" 
+              : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+          )}
+        >
+          <span>A</span>
+          <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-emerald-500 text-white">
+            {countApproved}
+          </span>
+        </button>
+
+        {/* R - Rejected */}
+        <button
+          type="button"
+          onClick={() => handleTabClick("REJECTED")}
+          className={clsx(
+            "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-2xs",
+            activeTab === "REJECTED" 
+              ? "bg-[#0B1E36] text-white" 
+              : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+          )}
+        >
+          <span>R</span>
+          <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-rose-500 text-white">
+            {countRejected}
+          </span>
+        </button>
+
+        {/* C - Cancelled */}
+        <button
+          type="button"
+          onClick={() => handleTabClick("CANCELLED")}
+          className={clsx(
+            "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-2xs",
+            activeTab === "CANCELLED" 
+              ? "bg-[#0B1E36] text-white" 
+              : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+          )}
+        >
+          <span>C</span>
+          <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-slate-500 text-white">
+            {countCancelled}
+          </span>
+        </button>
+      </div>
+
+      {/* Mobile Search Input (Visible < md, matching Screenshot) */}
+      <div className="relative w-full mb-3 md:hidden">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+        <input 
+          type="text" 
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search request, sender, or recipient" 
+          className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-2xs"
+        />
+      </div>
+
+      {/* Dynamic Tabs with Live Record Counts (Hidden on mobile) */}
+      <div className="hidden md:flex items-center gap-6 border-b border-slate-200 mb-6 w-full overflow-x-auto pb-0.5">
         <TabItem 
           label="All" 
           count={statusCounts.ALL} 
@@ -475,8 +617,8 @@ export default function CourierRequestsPage() {
         />
       </div>
 
-      {/* Filters Bar */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
+      {/* Desktop Filters Bar (Hidden on mobile) */}
+      <div className="hidden md:flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 min-w-[240px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
           <input 
@@ -542,8 +684,140 @@ export default function CourierRequestsPage() {
         </button>
       </div>
 
-      {/* Table Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      {/* Mobile Card List (Visible < md, matching Screenshot) */}
+      <div className="md:hidden space-y-3 mb-4">
+        {loading && displayRequests.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
+            <span className="text-xs">Loading requests...</span>
+          </div>
+        ) : displayRequests.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-slate-100 text-slate-500 text-xs">
+            No requests found.
+          </div>
+        ) : (
+          displayRequests.map((req) => (
+            <div 
+              key={req.id}
+              onClick={() => {
+                setSelectedRequestForDetails(req);
+                setIsDetailsModalOpen(true);
+              }}
+              className="bg-white rounded-2xl border border-slate-100 p-4 shadow-xs space-y-3 cursor-pointer hover:border-blue-200 transition-all"
+            >
+              {/* Top Row: Request ID, Sender, Recipient + Status Badge */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-mono text-xs text-slate-400 tracking-wider">
+                    {req.id.startsWith("CR-") ? req.id : `#${req.id.slice(0, 8).toUpperCase()}`}
+                  </div>
+                  <div className="text-base font-bold text-slate-900 leading-snug mt-0.5 truncate">
+                    {req.senderName}
+                  </div>
+                  <div className="text-xs text-slate-500 truncate">
+                    {req.recipientName}
+                  </div>
+                </div>
+
+                <div className="shrink-0">
+                  <MobileStatusBadge status={req.status} />
+                </div>
+              </div>
+
+              {/* 2x2 Details Grid */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs pt-1">
+                {/* Route */}
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ROUTE</div>
+                  <div className="font-semibold text-slate-800 mt-0.5 truncate">
+                    {req.originLocation?.city || req.originLocation?.name || "Unknown"} → {req.destinationLocation?.city || req.destinationLocation?.name || "Unknown"}
+                  </div>
+                </div>
+
+                {/* Package */}
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PACKAGE</div>
+                  <div className="font-semibold text-slate-800 mt-0.5 truncate">
+                    {req.packageDescription}{req.packageWeight ? ` · ${req.packageWeight} ${req.weightUnit || "KG"}` : ""}
+                  </div>
+                </div>
+
+                {/* Created */}
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">CREATED</div>
+                  <div className="font-semibold text-slate-800 mt-0.5">
+                    {formatDate(req.createdAt)}
+                  </div>
+                </div>
+
+                {/* Shipment */}
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">SHIPMENT</div>
+                  <div className="mt-0.5">
+                    {req.shipment ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs font-bold text-blue-600">
+                          {req.shipment.trackingNumber}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyTracking(req.shipment!.trackingNumber, req.id);
+                          }}
+                          title="Copy tracking number"
+                          className="text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                        >
+                          {copiedId === `track-${req.id}` ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-slate-400 text-xs font-medium">Not created</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Mobile Pagination (Visible < md, matching genuine backend numbers) */}
+      <div className="flex md:hidden items-center justify-between my-4 text-xs text-slate-500">
+        <div>
+          Showing <span className="font-semibold text-slate-700">
+            {totalRecords > 0 ? ((page - 1) * pageSize) + 1 : 0}–
+            {Math.min(page * pageSize, totalRecords)}
+          </span> of <span className="font-semibold text-slate-700">{totalRecords}</span> records
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button 
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page <= 1}
+            className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-medium shadow-2xs disabled:opacity-40 cursor-pointer"
+          >
+            Prev
+          </button>
+          <span className="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-xs">
+            {page}
+          </span>
+          <button 
+            onClick={() => setPage(Math.min(Math.max(1, totalPages), page + 1))}
+            disabled={page >= totalPages || totalPages <= 1}
+            className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-medium shadow-2xs disabled:opacity-40 cursor-pointer"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      {/* Table Card (Visible md+) */}
+      <div className="hidden md:flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto min-h-[420px]">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-[#0f1b3b] text-slate-300 text-xs font-semibold tracking-wider uppercase">

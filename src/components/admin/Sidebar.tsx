@@ -11,8 +11,7 @@ import {
   Building2, 
   Users, 
   UserCog, 
-  Settings,
-  Star
+  Settings
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -61,7 +60,7 @@ export function Sidebar() {
           if (userData) {
             const name = userData.name || userData.fullName || `${userData.firstName || ""} ${userData.lastName || ""}`.trim();
             const role = userData.role || "ADMIN";
-            setUser({ name: name || "Aminul Haque", role });
+            setUser({ name: name || "Staff Member", role });
           }
         }
       } catch (err) {
@@ -78,7 +77,7 @@ export function Sidebar() {
         const detail = customEvent.detail;
         const name = detail.fullName || `${detail.firstName || ""} ${detail.lastName || ""}`.trim();
         const role = detail.role || user?.role || "ADMIN";
-        setUser({ name: name || user?.name || "Aminul Haque", role });
+        setUser({ name: name || user?.name || "Staff Member", role });
       }
     };
 
@@ -88,7 +87,7 @@ export function Sidebar() {
     };
   }, []);
 
-  const displayName = user?.name || "Aminul Haque";
+  const displayName = user?.name || "Staff Member";
   const displayRole = user?.role || "ADMIN";
 
   // Filter out User Management for non-admin staff (PDF Spec RBAC Section 2.2)
@@ -104,7 +103,7 @@ export function Sidebar() {
   }).filter(group => group.links.length > 0);
 
   return (
-    <div className="flex flex-col h-screen w-64 bg-[#0B132B] text-slate-400 font-sans border-r border-slate-800">
+    <aside className="hidden md:flex flex-col h-screen w-64 bg-[#0B132B] text-slate-400 font-sans border-r border-slate-800 shrink-0">
       {/* Logo Area */}
       <div className="h-16 flex items-center px-6 border-b border-slate-800/50">
         <Link href="/admin/dashboard" className="flex items-center gap-3">
@@ -184,7 +183,7 @@ export function Sidebar() {
           </span>
         </div>
       </Link>
-    </div>
+    </aside>
   );
 }
 

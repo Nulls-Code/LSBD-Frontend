@@ -71,8 +71,8 @@ export default function ProfileAndSettingsPage() {
             }
           } else {
             // Fallback default state
-            setFullName("Aminul Haque");
-            setEmail("aminul@lsbd.demo");
+            setFullName("");
+            setEmail("");
             if (activeLocations.length > 0) {
               setSelectedHubId(activeLocations[0].id);
             }
@@ -232,7 +232,7 @@ export default function ProfileAndSettingsPage() {
             <div className="pb-6 mb-6 border-b border-slate-100 flex flex-col justify-center">
               <div className="flex items-center gap-2.5">
                 <span className="text-lg font-bold text-slate-900">
-                  {fullName || "Aminul Haque"}
+                  {fullName || "Staff Member"}
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-[#2D1B4E] text-[#C084FC] border border-[#581C87]">
                   {userRole}
